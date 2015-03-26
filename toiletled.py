@@ -32,42 +32,51 @@ def set_digital_out(output, value):
 def onoff_floor_led(floor, onoff):
     set_digital_out(floor2output[floor], onoff)
 
-def fetch_onoffled():
+def alloff_floor_led():
+    for floor in floor2output:
+        onoff_floor_led(floor, '0')
+
+def fetchstatus():
+    doorstatus = None
+    try:
+        r = None
+        r = urllib2.urlopen(url)
+        # {"6-1":"vacant","6-2":"engaged",...,"1-1":"unknown",...}
+        doorstatus = json.loads(r.read())
+    except Exception, err:
+        print 'HTTP error: ', err
+    finally:
+        if r: r.close()
+    return doorstatus
+
+def onoffled(doorstatus):
     def everyengaged(x, y):
         if x == 'engaged':
             return y
         else:
             return x
-    try:
-        r = urllib2.urlopen(url)
-        # {"6-1":"vacant","6-2":"engaged",...,"1-1":"unknown",...}
-        roomstatus = json.loads(r.read())
-        # {"6":["vacant","engaged",...],...,"1":["unknown",...]}
-        floorstatus = {}
-        for room in roomstatus:
-            floor = room.partition('-')[0]
-            if floorstatus.has_key(floor):
-                floorstatus[floor].append(roomstatus[room])
-            else:
-                floorstatus[floor] = [roomstatus[room]]
-        floorengaged = {} # {"6":"engaged",...,"2":"vacant","1":"unknown"}
-        for floor in floorstatus:
-            floorengaged[floor] = reduce(everyengaged, floorstatus[floor])
-        for floor in floorengaged:
-            onoff_floor_led(floor,
-                            '1' if floorengaged[floor] == 'engaged' else '0')
-    finally:
-        r.close()
+    if doorstatus is None:
+        alloff_floor_led()
+        return
+    # {"6":["vacant","engaged",...],...,"1":["unknown",...]}
+    floorstatus = {'1':[],'2':[],'3':[],'4':[],'5':[],'6':[]}
+    for door in doorstatus:
+        floor = door.partition('-')[0]
+        floorstatus[floor].append(doorstatus[door])
+    floorengaged = {} # {"6":"engaged",...,"2":"vacant","1":"unknown"}
+    for floor in floorstatus:
+        floorengaged[floor] = reduce(everyengaged, floorstatus[floor])
+    for floor in floorengaged:
+        onoff_floor_led(floor, '1' if floorengaged[floor] == 'engaged' else '0')
 
 def main():
     init()
     try:
         while True:
-            fetch_onoffled()
+            onoffled(fetchstatus())
             time.sleep(2)
     finally:
-        for floor in floor2output:
-            onoff_floor_led(floor, '0')
+        alloff_floor_led()
 
 if __name__ == "__main__":
     main()
