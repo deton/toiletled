@@ -5,22 +5,24 @@ import json, urllib2, sys, time
 if len(sys.argv) <= 1:
     print 'Usage: python toiletled.py <url>'
     quit()
+url = sys.argv[1]
+
+floor2output = {'1':'D2','2':'D3','3':'D4','4':'D5','5':'D6','6':'HSHK'}
 
 # http://wiki.linino.org/doku.php?id=wiki:lininoio_sysfs
 def enable_digital_output(output):
     # cf. https://github.com/ideino/ideino-linino-lib/blob/master/utils/layouts/linino_one.json
     gpio_mapping = {'D8':'104','D9':'105','D10':'106','D11':'107','D5':'114',
         'D13':'115','D3':'116','D2':'117','D4':'120','D12':'122','D6':'123',
-        'HSHK':'130'}
+        'HSHK':'130'} # D7->HSHK
     with open('/sys/class/gpio/export', 'w') as f:
         f.write(gpio_mapping[output])
     with open('/sys/class/gpio/' + output + '/direction', 'w') as f:
         f.write('out')
 
-for output in ['D2','D3','D4','D5','D6','HSHK']: # D7->HSHK
-    enable_digital_output(output)
-
-floor2output = {'1':'D2','2':'D3','3':'D4','4':'D5','5':'D6','6':'HSHK'}
+def init():
+    for output in floor2output.viewvalues():
+        enable_digital_output(output)
 
 def set_digital_out(output, value):
     '''Set value for digial out: '1' or '0'.'''
@@ -30,14 +32,12 @@ def set_digital_out(output, value):
 def onoff_floor_led(floor, onoff):
     set_digital_out(floor2output[floor], onoff)
 
-def everyengaged(x, y):
-    if x == 'engaged':
-        return y
-    else:
-        return x
-
-url = sys.argv[1]
 def fetch_onoffled():
+    def everyengaged(x, y):
+        if x == 'engaged':
+            return y
+        else:
+            return x
     try:
         r = urllib2.urlopen(url)
         # {"6-1":"vacant","6-2":"engaged",...,"1-1":"unknown",...}
@@ -59,10 +59,15 @@ def fetch_onoffled():
     finally:
         r.close()
 
-try:
-    while True:
-        fetch_onoffled()
-        time.sleep(2)
-finally:
-    for floor in floor2output:
-        onoff_floor_led(floor, '0')
+def main():
+    init()
+    try:
+        while True:
+            fetch_onoffled()
+            time.sleep(2)
+    finally:
+        for floor in floor2output:
+            onoff_floor_led(floor, '0')
+
+if __name__ == "__main__":
+    main()
