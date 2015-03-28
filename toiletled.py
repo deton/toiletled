@@ -63,11 +63,9 @@ def onoffled(doorstatus):
     for door in doorstatus:
         floor = door.partition('-')[0]
         floorstatus[floor].append(doorstatus[door])
-    floorengaged = {} # {"6":"engaged",...,"2":"vacant","1":"unknown"}
     for floor in floorstatus:
-        floorengaged[floor] = reduce(everyengaged, floorstatus[floor])
-    for floor in floorengaged:
-        onoff_floor_led(floor, '1' if floorengaged[floor] == 'engaged' else '0')
+        floorengaged = reduce(everyengaged, floorstatus[floor])
+        onoff_floor_led(floor, '1' if floorengaged == 'engaged' else '0')
 
 def main():
     init()
