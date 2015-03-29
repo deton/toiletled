@@ -63,7 +63,7 @@ WiFi接続して2秒おきに状況取得を行います。
 wifi-resetコマンドを作っておいて実行し、
 ストレージ上にはパスワードを持たないように設定。
 
-* シリアル接続無効化
+* シリアル接続無効化:
 LininoONEのVinに電源を供給しながらmicroUSBケーブルをさしかえて
 シリアル接続されないように、/etc/inittabの/bin/ash --loginをコメントアウトして
 reboot。
@@ -77,7 +77,7 @@ reboot。
     LininoONEでは未対応の模様。
     [/bin/loginが無い](https://forum.openwrt.org/viewtopic.php?id=16900)ので)
 
-* cron設定
+* cron設定:
 DHCPで割り当てられたIPアドレスを知るため、
 cronで5分間隔で特定サーバにcurlでアクセスする設定をしておく。
 httpdのアクセスログを見ればわかるように。
