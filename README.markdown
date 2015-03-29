@@ -114,5 +114,5 @@ httpdのアクセスログを見ればわかるように。
   DHCPサーバとして動作せず、
   APに接続したPCにIPアドレスが割り当てられなくて困るので。
 * 社内ネットが10.0.0.0等の場合、
-  /etc/config/dhcpでrebind_protectionは0にする必要あり。
+  dnsmasqサーバの設定(/etc/config/dhcp)でrebind_protectionは0にする必要あり。
   でないと上位DNSからの検索結果を通してくれない。
