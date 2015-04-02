@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # coding: utf8
-import json, urllib2, sys, time
+import json, urllib2, sys, time, datetime
 
 if len(sys.argv) <= 1:
     print 'Usage: python toiletled.py <url>'
@@ -44,7 +44,7 @@ def fetchstatus():
         # {"6-1":"vacant","6-2":"engaged",...,"1-1":"unknown",...}
         doorstatus = json.loads(r.read())
     except Exception, err:
-        print 'HTTP error: ', err
+        print '{} HTTP error: {}'.format(datetime.datetime.now(), err)
     finally:
         if r: r.close()
     return doorstatus
