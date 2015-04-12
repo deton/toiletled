@@ -3,6 +3,7 @@
 会社のトイレ前に置く、個室が全て使用中かどうかを表示するLEDです。
 
 ![toiletled写真](../img/toiletledw.jpg)
+![toiletledフルカラー版](../img/toiletledfc.jpg)
 
 その階の全個室が使用中の場合は赤LEDを点灯します
 (電車のトイレの使用中ランプと同様)。
