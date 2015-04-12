@@ -2,6 +2,8 @@
 
 会社のトイレ前に置く、個室が全て使用中かどうかを表示するLEDです。
 
+![toiletled写真](../img/toiletledw.jpg)
+
 その階の全個室が使用中の場合は赤LEDを点灯します
 (電車のトイレの使用中ランプと同様)。
 各階1個のLED。全6階の建物の場合はLED 6個。
@@ -9,9 +11,6 @@
 * トイレのドアを開けなくても、個室が全て使用中かどうかわかる
 * どの階に空きがあるかが表示されるので、
   今いる階が全て使用中の場合に、上と下のどちらの階に向かえばいいかわかる
-
-![toiletled写真](../img/toiletledw.jpg)
-![toiletled接写](../img/toiletled-closeupw.jpg)
 
 最近、他の部の人が、各個室の使用中状況をWebで取得できるようにしてくれました
 (リードスイッチ、TWE-Lite、Raspberry Piを使っている模様)。
@@ -24,14 +23,57 @@
 全て使用中の場合、他の階に行くことになるのですが、
 上の階に行くか下の階に行くか判断したいので、他の階の使用中状況も表示します。
 
+WiFi接続して2秒おきに状況取得を行います。
+
+## フルカラーLED版
+NeoPixelフルカラーLEDを使用。
+
++ 赤色: 全て使用中
++ 黄色: 空きが1つ
++ 緑色: 空きが2つ以上
++ 消灯: 使用中状況取得不可(WiFi切断等)
+
+緑色と消灯が分かれているので、
+空きがあるのかWiFi切断されているのかを示せるのが、
+赤色LED版と比べた利点の一つ。
+
+## 赤色LED版
+
+![toiletled接写](../img/toiletled-closeupw.jpg)
+
 下から5つ目のLEDだけずらしているのは、
 ここが5階であることを示すためです(5階への設置用)。
 
-WiFi接続して2秒おきに状況取得を行います。
-
 ## 部品
+### フルカラーLED版
+#### ソフトウェア
+* LininoOS (`linup latest master`)
+* toiletledfc.py。bridge.py経由でMCU側に色を指示。
+* toiletledfc.ino。bridge.py経由で指定された色を、NeoPixelライブラリに指示
+
+RGBそれぞれ0-255が指定可能ですが、255を指定するとまぶしすぎるので、
+20を指定しています。
+
+#### ハードウェア
 * [Linino ONE](https://www.switch-science.com/catalog/2152/)。
-  Arduino+Linux。Arduino Yunの小型版。WiFi接続できて、sysfsでGPIO制御可。5V IO
+  [Arduino Yun](http://arduino.cc/en/Guide/ArduinoYun)の小型版。
+  Arduino用マイコン(ATmega32u4, lininoのドキュメントではMCU)と、
+  Linux(OpenWrt)用CPU(Atheros AR9331, MIPS)が載っていて、WiFi接続可能。5V IO
+* [NeoPixel RGB Module 8mm 基板付き](http://www.akiba-led.jp/product/963) 6個
+* ピンヘッダ 3ピン
+* はさみで切れるユニバーサル基板
+* モバイルバッテリ
+* microUSBケーブル
+
+### 赤色LED版
+#### ソフトウェア
+* LininoIO (lininoIOイメージの20141014版)
+* toiletled.py。sysfsでLED点灯制御
+* MCU側はbathos-mcuio
+
+#### ハードウェア
+* [Linino ONE](http://akizukidenshi.com/catalog/g/gM-08902/)。
+  sysfsでGPIO制御可。
 * 赤色LED 6個
 * 抵抗680Ω 6個
 * ライトアングル ピンヘッダ 7ピン
@@ -40,23 +82,19 @@ WiFi接続して2秒おきに状況取得を行います。
 * microUSBケーブル
 
 ## 改良案
-* NeoPixelフルカラーLEDによる黄色(残り空き1つ)や緑色表示。
-  (マトリックス状に並べて各個室の使用状況を表示することもできそうだが、
-  そこまでするとかえって見た時に把握しづらくなるかも。)
-* LininoONEは上下逆向きの方が良かったかも。WiFiアンテナを上側にする。
 * ぽん置きで使えるように、LininoONEから直接2秒おきに状況取得を行っているが、
   2秒おきの状況取得はサーバで行って、
   LininoONEに置いたLED点灯・消灯を行うCGIスクリプトをたたく方が、
   バッテリが持つかも。
   状況表示ランプ台数が増えた場合もサーバでやる方が良さそう。
-  サーバ側でのsubscriber管理はMQTTを使う方が楽かも。
+  サーバ側でのsubscriber管理はPubSubHubbubやMQTTを使う方が楽かも。
 * WiFiの接続パスワードの抜き出し対策を行うと不便になるので、
   ZigBee(TWE-Lite)やBluetoothで外部から
   LED点灯・消灯を指示する形の方が良いかも。
   一方で、ZigBeeやBluetoothの場合、送信側の設置が必要になって面倒な点も。
   (センシング情報を集める部分でTWE-LiteとRaspberry Piを使っているようなので、
   理想的には、そこに状況表示ランプ制御機能を追加。)
-* HTTPによる状況取得失敗時には失敗がわかるようなLED表示を行う。
+* (赤LED版)HTTPによる状況取得失敗時には失敗がわかるようなLED表示を行う。
   LininoONE本体の赤LED(D13)を点滅する等。
 
 ## WiFiの接続パスワードの抜き出し対策
@@ -67,7 +105,7 @@ WiFi接続して2秒おきに状況取得を行います。
 wifi-resetコマンドを作っておいて実行し、
 ストレージ上にはパスワードを持たないように設定。
 
-* シリアル接続無効化:
+* (赤色LED版)シリアル接続無効化:
 LininoONEのVinに電源を供給しながらmicroUSBケーブルをさしかえて
 シリアル接続されないように、/etc/inittabの/bin/ash --loginをコメントアウトして
 reboot。
@@ -79,7 +117,14 @@ reboot。
 
     (シリアル接続時もパスワード入力要にできれば良いのだけど、
     LininoONEでは未対応の模様。
-    [/bin/loginが無い](https://forum.openwrt.org/viewtopic.php?id=16900)ので)
+    [/bin/loginが無い](https://forum.openwrt.org/viewtopic.php?id=16900)ので。
+    agettyパッケージを入れるといいかも)
+
+* (フルカラーLED版)bridge.pyの停止無効化(bridge.py.patch):
+LininoONEのVinに電源を供給しながらmicroUSBケーブルをさしかえて、
+MCU側にLininoOneSerialTerminalを書き込んで、
+シリアル接続してLinux側に入られないようにするため、
+/usr/lib/python2.7/bridge/bridge.pyが動き続けるように変更。
 
 * cron設定:
 DHCPで割り当てられたIPアドレスを知るため、
@@ -103,7 +148,7 @@ httpdのアクセスログを見ればわかるように。
         - sshしてwifi-resetしてpython toiletled.py
 
 ## はまった点
-* 2015-02-03版LininoIOイメージでは
+* (赤色LED版)2015-02-03版LininoIOイメージでは
   [WPA2 Enterprise接続](https://github.com/deton/phsringnotify#linino-one%E3%81%A7%E3%81%AEwpa2-enterprise%E3%81%B8%E3%81%AE%E6%8E%A5%E7%B6%9A%E6%96%B9%E6%B3%95)
   が成功せず。
   associatedの後10秒程度で、`deauthenticating from xx:xx:... by local choice (Reason: 3=DEAUTH_LEAVING)`。

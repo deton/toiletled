@@ -1,0 +1,28 @@
+--- bridge.py.orig	2014-09-15 10:35:45.000000000 +0900
++++ bridge.py	2015-04-07 20:36:59.000000000 +0900
+@@ -50,8 +50,9 @@ class CommandProcessor:
+       
+   def process(self, data):
+     if data == 'XXXXX':
+-      print 'Goodbye...'
+-      self.finished = True
++      #print 'Goodbye...'
++      print 'Ignoreing bridge shutdown request...'
++      #self.finished = True
+       return ''
+       
+     if data[0:2] == 'XX':
+@@ -84,7 +85,9 @@ start_time = time.time()
+ with cbreak():
+   #while time.time() - start_time < 100:
+   while True:
+-    res = pr.process()
+-    if res == False:
+-      break
+-
++    try:
++      res = pr.process()
++      if res == False:
++        break
++    except:
++      pass
