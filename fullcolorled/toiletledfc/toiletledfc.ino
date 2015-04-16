@@ -13,6 +13,9 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_RGB + NEO_KHZ80
 #define Serial Console
 #endif
 
+uint32_t prev_recv_tm = 0;
+const uint32_t TIMEOUTMS = 5000; // 5 [sec]
+
 void setup() {
   pixels.begin();
 
@@ -53,6 +56,7 @@ uint32_t vacant2color(char vacant) {
 void Serial_listen() {
   int floor = 1;
   while (Serial.available() > 0) {
+    prev_recv_tm = millis();
     int c = Serial.read(); // available doors at each floor
     switch (c) { 
     case '0':
@@ -78,7 +82,16 @@ void Serial_listen() {
   }
 }
 
+void offallled() {
+  for (int floor = 1; floor <= 6; floor++) {
+    pixels.setPixelColor(floor2pixelidx(floor), vacant2color('u'));
+  }
+  pixels.show();
+}
 
 void loop() {
   Serial_listen();
+  if (millis() - prev_recv_tm > TIMEOUTMS) {
+    offallled();
+  }
 }
