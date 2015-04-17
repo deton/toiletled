@@ -54,9 +54,8 @@ uint32_t vacant2color(char vacant) {
 }
 
 void Serial_listen() {
-  int floor = 1;
+  int floor = -1;
   while (Serial.available() > 0) {
-    prev_recv_tm = millis();
     int c = Serial.read(); // available doors at each floor
     switch (c) { 
     case '0':
@@ -65,11 +64,13 @@ void Serial_listen() {
     case '3':
     case '4':
     case 'u': // unknown
-      pixels.setPixelColor(floor2pixelidx(floor), vacant2color(c));
-      pixels.show();
-      floor++;
-      if (floor > 6) {
-        floor = 1;
+      if (floor >= 1 && floor <= 6) { // ignore illegal command. TODO: checksum
+        pixels.setPixelColor(floor2pixelidx(floor), vacant2color(c));
+        if (floor == 6) {
+          pixels.show();
+          prev_recv_tm = millis();
+        }
+        floor++;
       }
       break;
     case '\n':
@@ -77,6 +78,7 @@ void Serial_listen() {
       floor = 1;
       break;
     default:
+      floor = -1;
       break;
     }
   }
