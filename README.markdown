@@ -39,6 +39,64 @@ NeoPixelフルカラーLEDを使用。
 空きがあるのかWiFi切断されているのかを示せるのが、
 赤色LED版と比べた利点の一つ。
 
+### フルカラーLED版(Type2)
+![toiletledフルカラー版2](../img/toiletledfc2.jpg)
+
+LininoONE本体内蔵WiFiだとつながりにくい場所に置きたかったので、
+LininoONE用USBホスト拡張モジュール[dogUSB](http://akizukidenshi.com/catalog/g/gM-08903/)
+を接続して、USB WiFiアダプタLogitec LAN-W300N/U2Sを使用。
+
+#### [USB WiFiを使用する方法](http://www.lucadentella.it/en/2014/11/08/yun-adattatore-wifi-usb/)
+rt2800usbドライバはLininoONEのパッケージには無いので、
+Arduino Yun用のものを無理やり入れる。
+
+/etc/opkg.confにyun用リポジトリを追加。
+`option check_signature`をコメントアウト。
+
+    src/gz yun http://downloads.arduino.cc/openwrtyun/1/packages
+
+`opkg update`後、`--force-depends`付きでopkg install。
+
+    opkg --force-depends install kmod-rt2800-lib kmod-rt2800-usb kmod-rt2x00-lib kmod-rt2x00-usb
+
+これで、WLI-UC-GNMは刺せば認識されるようになる。
+LAN-W300N/U2Sは、/etc/hotplug.d/usb/に以下のファイル10-lanw300nu2sを作成。
+
+```
+#!/bin/sh
+# Logitec LAN-W300N/U2S
+PRODID="789/169/101"
+
+# echo "$PRODUCT" > /tmp/lan-w300nu2s
+if [ "$PRODUCT" = "$PRODID" ]; then
+	case "$ACTION" in
+		add)
+			echo "0789 0169" > /sys/bus/usb/drivers/rt2800usb/new_id
+			;;
+		remove)
+			;;
+	esac	
+fi
+```
+
+その他の設定は、
+http://www.lucadentella.it/en/2014/11/08/yun-adattatore-wifi-usb/
+の記述と同様。
+
+* rebootしても/etc/config/wirelessにradio1が追加されない場合は、
+  `wifi detect >> /etc/config/wireless`
+* /usr/bin/wifi-live-or-reset内のIFACEをwlan1等に変更。
+
+* LininoONEからの5V出力ピンがdogUSBで使われるので、
+  LED用にはモバイルバッテリから供給。
+  aitendoで売っていた、[USB-DCプラグケーブル](http://www.aitendo.com/product/4676)と、
+  [DCジャック](http://www.aitendo.com/product/7373)を使用。
+* モバイルバッテリQE-PL102(2700mAh)だと3時間程度しか持たなくなったので、
+  大容量のモバイルバッテリcheero Energy Plus 12000mAhを使用。
+* LininoONEは[外部アンテナ非対応](http://forum.arduino.cc/index.php?topic=188976.0)。
+  実装されているのはテスト用コネクタ。外部アンテナを固定できない。
+  ケースをうまく作れば固定できるかもしれないけど。
+
 ## 赤色LED版
 
 ![toiletled接写](../img/toiletled-closeupw.jpg)
