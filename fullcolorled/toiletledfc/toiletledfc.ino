@@ -41,11 +41,11 @@ uint32_t vacant2color(char vacant) {
     return pixels.Color(25, 20, 2); // orange?
     //return pixels.Color(20, 20, 0); // yellow
   case '2':
-    return pixels.Color(12, 20, 0);
+    return pixels.Color(0, 20, 0); // green
     //return pixels.Color(12, 20, 0);
   case '3':
-    return pixels.Color(8, 20, 0);
-    //return pixels.Color(6, 20, 0);
+    return pixels.Color(0, 20, 0); // green
+    //return pixels.Color(8, 20, 0);
   case '4':
     return pixels.Color(0, 20, 0); // green
   case 'u': // unknown
