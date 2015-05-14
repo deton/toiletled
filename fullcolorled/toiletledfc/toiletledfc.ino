@@ -1,9 +1,10 @@
 #include <Adafruit_NeoPixel.h>
 #include <avr/power.h>
 
-#define NUMFLOORS 6
+#define FLOORMIN 1
+#define FLOORMAX 6
 
-#define PIN            2
+#define PIN            9
 #define NUMPIXELS      6
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_RGB + NEO_KHZ800);
 
@@ -27,9 +28,9 @@ void setup() {
 #endif
 }
 
-// floor 1-6 => pixelidx 5-0
+// floor 1-6 => pixelidx 0-5
 int floor2pixelidx(int floor) {
-  return NUMFLOORS - floor;
+  return floor - FLOORMIN;
 }
 
 uint32_t vacant2color(char vacant) {
@@ -64,9 +65,10 @@ void Serial_listen() {
     case '3':
     case '4':
     case 'u': // unknown
-      if (floor >= 1 && floor <= 6) { // ignore illegal command. TODO: checksum
+      // ignore illegal command. TODO: checksum
+      if (floor >= FLOORMIN && floor <= FLOORMAX) {
         pixels.setPixelColor(floor2pixelidx(floor), vacant2color(c));
-        if (floor == 6) {
+        if (floor == FLOORMAX) {
           pixels.show();
           prev_recv_tm = millis();
         }
@@ -75,7 +77,7 @@ void Serial_listen() {
       break;
     case '\n':
     case '\r':
-      floor = 1;
+      floor = FLOORMIN;
       break;
     default:
       floor = -1;
@@ -85,7 +87,7 @@ void Serial_listen() {
 }
 
 void offallled() {
-  for (int floor = 1; floor <= 6; floor++) {
+  for (int floor = FLOORMIN; floor <= FLOORMAX; floor++) {
     pixels.setPixelColor(floor2pixelidx(floor), vacant2color('u'));
   }
   pixels.show();
