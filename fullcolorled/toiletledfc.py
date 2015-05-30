@@ -23,7 +23,7 @@ def fetchstatus():
     doorstatus = None
     try:
         r = None
-        r = urllib2.urlopen(url)
+        r = urllib2.urlopen(url, timeout=2)
         # {"6-1":"vacant","6-2":"engaged",...,"1-1":"unknown",...}
         doorstatus = json.loads(r.read())
     except Exception, err:
@@ -39,9 +39,6 @@ def onoffled(doorstatus):
             return n + 1
         else:
             return n
-    if doorstatus is None:
-        alloff_floor_led()
-        return
     # {"6":["vacant","engaged",...],...,"1":["unknown",...]}
     floorstatus = {'1':[],'2':[],'3':[],'4':[],'5':[],'6':[]}
     for door in doorstatus:
@@ -60,8 +57,13 @@ def main():
     init()
     try:
         while True:
-            onoffled(fetchstatus())
-            time.sleep(2)
+            doorstatus = fetchstatus()
+            if doorstatus is None: # fetch failed
+                alloff_floor_led()
+                time.sleep(1)
+            else:
+                onoffled(doorstatus)
+                time.sleep(2)
     finally:
         alloff_floor_led()
 
