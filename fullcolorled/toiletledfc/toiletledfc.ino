@@ -3,6 +3,7 @@
 
 #define FLOORMIN 1
 #define FLOORMAX 6
+#define THISFLOOR 5
 
 #define PIN            9
 #define NUMPIXELS      6
@@ -33,21 +34,30 @@ int floor2pixelidx(int floor) {
   return floor - FLOORMIN;
 }
 
-uint32_t vacant2color(char vacant) {
+uint32_t vacant2color(char vacant, int floor) {
   switch (vacant) {
   case '0':
-    return pixels.Color(20, 0, 0); // red
+    if (floor == THISFLOOR) {
+      return pixels.Color(255, 0, 0); // red
+    } else {
+      return pixels.Color(40, 0, 0); // red
+    }
   case '1':
-    return pixels.Color(25, 20, 2); // orange?
+    if (floor == THISFLOOR) {
+      return pixels.Color(255, 255, 0);
+    } else {
+      return pixels.Color(50, 40, 4); // orange?
+    }
+    //return pixels.Color(25, 20, 2); // orange?
     //return pixels.Color(20, 20, 0); // yellow
   case '2':
-    return pixels.Color(0, 20, 0); // green
-    //return pixels.Color(12, 20, 0);
   case '3':
-    return pixels.Color(0, 20, 0); // green
-    //return pixels.Color(8, 20, 0);
   case '4':
-    return pixels.Color(0, 20, 0); // green
+    if (floor == THISFLOOR) {
+      return pixels.Color(0, 0, 255); // blue
+    } else {
+      return pixels.Color(0, 0, 40); // blue
+    }
   case 'u': // unknown
   default:
     return pixels.Color(0, 0, 0);
@@ -67,7 +77,7 @@ void Serial_listen() {
     case 'u': // unknown
       // ignore illegal command. TODO: checksum
       if (floor >= FLOORMIN && floor <= FLOORMAX) {
-        pixels.setPixelColor(floor2pixelidx(floor), vacant2color(c));
+        pixels.setPixelColor(floor2pixelidx(floor), vacant2color(c, floor));
         if (floor == FLOORMAX) {
           pixels.show();
           prev_recv_tm = millis();
@@ -88,7 +98,7 @@ void Serial_listen() {
 
 void offallled() {
   for (int floor = FLOORMIN; floor <= FLOORMAX; floor++) {
-    pixels.setPixelColor(floor2pixelidx(floor), vacant2color('u'));
+    pixels.setPixelColor(floor2pixelidx(floor), vacant2color('u', floor));
   }
   pixels.show();
 }

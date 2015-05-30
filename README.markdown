@@ -111,9 +111,6 @@ http://www.lucadentella.it/en/2014/11/08/yun-adattatore-wifi-usb/
 * toiletledfc.py。bridge.py経由でMCU側に色を指示。
 * toiletledfc.ino。bridge.py経由で指定された色を、NeoPixelライブラリに指示
 
-RGBそれぞれ0-255が指定可能ですが、255を指定するとまぶしすぎるので、
-20を指定しています。
-
 #### ハードウェア
 * [Linino ONE](https://www.switch-science.com/catalog/2152/)。
   [Arduino Yun](http://arduino.cc/en/Guide/ArduinoYun)の小型版。
