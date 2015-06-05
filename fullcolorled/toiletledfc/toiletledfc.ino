@@ -3,7 +3,6 @@
 
 #define FLOORMIN 1
 #define FLOORMAX 6
-#define THISFLOOR 5
 
 #define PIN            9
 #define NUMPIXELS      6
@@ -34,71 +33,89 @@ int floor2pixelidx(int floor) {
   return floor - FLOORMIN;
 }
 
-uint32_t vacant2color(char vacant, int floor) {
-  switch (vacant) {
-  case '0':
-    if (floor == THISFLOOR) {
-      return pixels.Color(255, 0, 0); // red
-    } else {
-      return pixels.Color(40, 0, 0); // red
-    }
-  case '1':
-    if (floor == THISFLOOR) {
-      return pixels.Color(255, 255, 0);
-    } else {
-      return pixels.Color(50, 40, 4); // orange?
-    }
-    //return pixels.Color(25, 20, 2); // orange?
-    //return pixels.Color(20, 20, 0); // yellow
-  case '2':
-  case '3':
-  case '4':
-    if (floor == THISFLOOR) {
-      return pixels.Color(0, 0, 255); // blue
-    } else {
-      return pixels.Color(0, 0, 40); // blue
-    }
-  case 'u': // unknown
-  default:
-    return pixels.Color(0, 0, 0);
+#define UINT32_MAX 0xffffffff
+#define RGB_PARSING UINT32_MAX
+#define RGB_UNDEF   (UINT32_MAX-1)
+
+uint32_t parseRgb(int n) {
+  static int rgb[3] = {-1, -1, -1};
+  static int i = 0;
+
+  if (n < 0) { // reset
+    i = 0;
+    rgb[0] = rgb[1] = rgb[2] = -1;
+    return RGB_UNDEF;
   }
+
+  if (rgb[i] < 0) {
+    rgb[i] = n;
+  } else {
+    rgb[i] = rgb[i]*16 + n;
+    i++;
+    if (i >= 3) { // rgb parse done
+      uint32_t c = pixels.Color(rgb[0], rgb[1], rgb[2]);
+      i = 0;
+      rgb[0] = rgb[1] = rgb[2] = -1;
+      return c;
+    }
+  }
+  return RGB_PARSING;
 }
 
 void Serial_listen() {
   int floor = -1;
+  // rgb color for each floor. ex: ff0000ff0000ff0000ff0000ff0000ff0000
   while (Serial.available() > 0) {
-    int c = Serial.read(); // available doors at each floor
+    int c = Serial.read();
+    uint32_t color = RGB_UNDEF;
     switch (c) { 
     case '0':
     case '1':
     case '2':
     case '3':
     case '4':
-    case 'u': // unknown
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+      color = parseRgb(c - '0');
+      break;
+    case 'a':
+    case 'b':
+    case 'c':
+    case 'd':
+    case 'e':
+    case 'f':
+      color = parseRgb(c - 'a' + 10);
+      break;
+    case '\n':
+    case '\r':
+      floor = FLOORMIN;
+      parseRgb(-1); // reset
+      continue;
+    default:
       // ignore illegal command. TODO: checksum
+      floor = -1;
+      continue;
+    }
+    if (color != RGB_PARSING && color != RGB_UNDEF) {
       if (floor >= FLOORMIN && floor <= FLOORMAX) {
-        pixels.setPixelColor(floor2pixelidx(floor), vacant2color(c, floor));
+        pixels.setPixelColor(floor2pixelidx(floor), color);
         if (floor == FLOORMAX) {
           pixels.show();
           prev_recv_tm = millis();
         }
         floor++;
       }
-      break;
-    case '\n':
-    case '\r':
-      floor = FLOORMIN;
-      break;
-    default:
-      floor = -1;
-      break;
     }
   }
 }
 
 void offallled() {
+  uint32_t offcolor = pixels.Color(0, 0, 0);
   for (int floor = FLOORMIN; floor <= FLOORMAX; floor++) {
-    pixels.setPixelColor(floor2pixelidx(floor), vacant2color('u', floor));
+    pixels.setPixelColor(floor2pixelidx(floor), offcolor);
   }
   pixels.show();
 }
