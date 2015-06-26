@@ -19,6 +19,8 @@ if len(sys.argv) <= 1:
     quit()
 url = sys.argv[1]
 
+first_engaged_times = {}
+
 # Linino ONE bridge to Arduino
 tn = telnetlib.Telnet('localhost', 6571)
 
@@ -51,11 +53,24 @@ def onoffled(doorstatus):
             return n + 1
         else:
             return n
+    now = time.time()
     # {"6":["vacant","engaged",...],...,"1":["unknown",...]}
     floorstatus = {'1':[],'2':[],'3':[],'4':[],'5':[],'6':[]}
+    blinkflag = {}
     for door in doorstatus:
         floor = door.partition('-')[0]
         floorstatus[floor].append(doorstatus[door])
+        # blinkflag
+        if doorstatus[door] == 'engaged':
+            if door not in first_engaged_times:
+                first_engaged_times[door] = now
+            else:
+                # keep engaged 1 hour. sensor is broken? or battery is empty
+                if now - first_engaged_times[door] > 3600:
+                    blinkflag[floor] = True
+        else:
+            if door in first_engaged_times:
+                del first_engaged_times[door]
     # vacant count or 'u'(nknown) for floor 1-6
     floorvacant = {}
     for floor in sorted(floorstatus.viewkeys()):
@@ -70,6 +85,10 @@ def onoffled(doorstatus):
         colorsetother = COLORSET_NORMAL
     floorcolorstr = ''
     for floor in sorted(floorvacant.viewkeys()):
+        if blinkflag.get(floor, False):
+            floorcolorstr += 'T' # tenTou
+        else:
+            floorcolorstr += 'M' # tenMetu
         if floorvacant[floor] == 0:
             c = 'RED'
         elif floorvacant[floor] == 1:

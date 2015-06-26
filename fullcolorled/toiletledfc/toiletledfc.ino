@@ -16,6 +16,12 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_RGB + NEO_KHZ80
 
 uint32_t prev_recv_tm = 0;
 const uint32_t TIMEOUTMS = 5000; // 5 [sec]
+uint32_t prev_blink_tm = 0;
+const uint32_t BLINKMS = 500; // 500 [ms]
+//TODO: make struct or object
+uint32_t colors[NUMPIXELS];
+int isblinks[NUMPIXELS];
+int isledon[NUMPIXELS];
 
 void setup() {
   pixels.begin();
@@ -31,6 +37,11 @@ void setup() {
 // floor 1-6 => pixelidx 0-5
 int floor2pixelidx(int floor) {
   return floor - FLOORMIN;
+}
+
+void setColor(int idx, uint32_t color) {
+  isledon[idx] = (color != 0);
+  pixels.setPixelColor(idx, color);
 }
 
 #define UINT32_MAX 0xffffffff
@@ -64,6 +75,7 @@ uint32_t parseRgb(int n) {
 
 void Serial_listen() {
   int floor = -1;
+  int isblink = 0;
   // rgb color for each floor. ex: ff0000ff0000ff0000ff0000ff0000ff0000
   while (Serial.available() > 0) {
     int c = Serial.read();
@@ -89,9 +101,16 @@ void Serial_listen() {
     case 'f':
       color = parseRgb(c - 'a' + 10);
       break;
+    case 'T': // tenTou
+      isblink = 0;
+      break;
+    case 'M': // tenMetu
+      isblink = 1;
+      break;
     case '\n':
     case '\r':
       floor = FLOORMIN;
+      isblink = 0;
       parseRgb(-1); // reset
       continue;
     default:
@@ -101,10 +120,14 @@ void Serial_listen() {
     }
     if (color != RGB_PARSING && color != RGB_UNDEF) {
       if (floor >= FLOORMIN && floor <= FLOORMAX) {
-        pixels.setPixelColor(floor2pixelidx(floor), color);
+        int idx = floor2pixelidx(floor);
+        colors[idx] = color;
+        isblinks[idx] = isblink;
+        setColor(idx, color);
         if (floor == FLOORMAX) {
           pixels.show();
           prev_recv_tm = millis();
+          prev_blink_tm = millis();
         }
         floor++;
       }
@@ -112,17 +135,43 @@ void Serial_listen() {
   }
 }
 
+void blink(int i) {
+  if (isledon[i]) {
+    setColor(i, 0);
+  } else {
+    setColor(i, colors[i]);
+  }
+}
+
+void blinkled() {
+  for (int floor = FLOORMIN; floor <= FLOORMAX; floor++) {
+    int i = floor2pixelidx(floor);
+    if (isblinks[i]) {
+      blink(i);
+    }
+  }
+  pixels.show();
+  prev_blink_tm = millis();
+}
+
 void offallled() {
   uint32_t offcolor = pixels.Color(0, 0, 0);
   for (int floor = FLOORMIN; floor <= FLOORMAX; floor++) {
-    pixels.setPixelColor(floor2pixelidx(floor), offcolor);
+    int idx = floor2pixelidx(floor);
+    colors[idx] = offcolor;
+    isblinks[idx] = 0;
+    setColor(idx, offcolor);
   }
   pixels.show();
 }
 
 void loop() {
-  Serial_listen();
-  if (millis() - prev_recv_tm > TIMEOUTMS) {
+  uint32_t now = millis();
+  if (now - prev_blink_tm > BLINKMS) {
+    blinkled();
+  }
+  if (now - prev_recv_tm > TIMEOUTMS) {
     offallled();
   }
+  Serial_listen();
 }
