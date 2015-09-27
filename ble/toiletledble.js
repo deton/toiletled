@@ -2,16 +2,21 @@ var noble = require('noble');
 var http = require('http');
 
 var SERVERURL = process.argv[2] || 'http://192.168.179.6/~toilet/toilet.php';
+var THISFLOOR = '5';
+var IGNOREFLOOR = '2'; // XXX: no sensor at floor 2. always unknown
 var FLOOR_OFF    = '   ';
-var FLOOR_GREEN  = '!  ';
-var FLOOR_YELLOW = ' ! ';
-var FLOOR_RED    = '  !';
-var FLOOR_GREEN_BLINK  = '"  ';
-var FLOOR_YELLOW_BLINK = ' " ';
-var FLOOR_RED_BLINK    = '  "';
+var FLOOR_GREEN  = '*  ';
+var FLOOR_YELLOW = ' * ';
+var FLOOR_RED    = '  *';
+var THISFLOOR_GREEN  = ')  ';
+var THISFLOOR_YELLOW = ' ) ';
+var THISFLOOR_RED    = '  )';
+var FLOOR_GREEN_BLINK  = '!  ';
+var FLOOR_YELLOW_BLINK = ' ! ';
+var FLOOR_RED_BLINK    = '  !';
 var ALL_OFF = '\n' + FLOOR_OFF + FLOOR_OFF + FLOOR_OFF + FLOOR_OFF + FLOOR_OFF;
 
-var first_engaged_times = {};
+var firstEngagedTimes = {};
 
 // http://www.robotsfx.com/robot/img/radio/BLESerial/BLESerial_how5.html
 var serviceUuid = '569a1101b87f490c92cb11ba5ea5167c'; // BLESerial
@@ -73,63 +78,67 @@ function sendBle(msg, cb) {
       console.log('send error:' + err);
       cb(err);
     }
-    console.log('write:' + msgbuf);
+    //console.log('write:' + msgbuf);
     cb(null);
   });
 }
 
-function makeblemsg(doorstatus) {
-  function countvacant(n, x) {
+function makeblemsg(doorStatus) {
+  function countVacant(n, x) {
     return (x == 'vacant') ? n + 1 : n;
   }
   // {"6":["vacant","engaged",...],...,"1":["unknown",...]}
-  var floorstatus = {'1':[],'2':[],'3':[],'4':[],'5':[],'6':[]};
-  var blinkflag = {};
+  var floorStatus = {'1':[],'2':[],'3':[],'4':[],'5':[],'6':[]};
+  var isAmbiguous = {};
   var now = Date.now();
-  for (var door in doorstatus) {
+  for (var door in doorStatus) {
     var floor = door[0];
-    floorstatus[floor].push(doorstatus[door]);
-    // blinkflag
-    if (doorstatus[door] == 'engaged') {
-      if (!(door in first_engaged_times)) {
-        first_engaged_times[door] = now;
+    floorStatus[floor].push(doorStatus[door]);
+    // isAmbiguous
+    if (doorStatus[door] == 'engaged') {
+      if (!(door in firstEngagedTimes)) {
+        firstEngagedTimes[door] = now;
       } else {
         // keep engaged 1 hour. sensor is broken? or battery is empty
-        if (now - first_engaged_times[door] > 3600000) {
-          blinkflag[floor] = true;
+        if (now - firstEngagedTimes[door] > 3600000) {
+          isAmbiguous[floor] = true;
         }
       }
     } else {
-      if (door in first_engaged_times) {
-        delete first_engaged_times[door];
+      if (door in firstEngagedTimes) {
+        delete firstEngagedTimes[door];
       }
     }
   }
   // vacant count or 'u'(nknown) for floor 1-6
-  floorvacant = {};
-  for (var floor in floorstatus) {
-    var count = floorstatus[floor].reduce(countvacant, 0);
-    if (count == 0 && floorstatus[floor].indexOf('unknown') >= 0) {
+  floorVacant = {};
+  for (var floor in floorStatus) {
+    var count = floorStatus[floor].reduce(countVacant, 0);
+    if (count == 0 && floorStatus[floor].indexOf('unknown') >= 0) {
       count = 'u';
     }
-    floorvacant[floor] = count;
+    floorVacant[floor] = count;
   }
   var blemsg = '\n'; // begin mark
-  for (var floor = 1; floor <= 6; floor++) {
-    if (floor == 2) { // XXX: no sensor at floor 2. always unknown
+  for (var floor = '1'; floor <= '6'; floor++) {
+    if (floor == IGNOREFLOOR) { // XXX: no sensor at floor 2. always unknown
       continue;
     }
-    if (floorvacant[floor] == 0) {
-      blemsg += blinkflag[floor] ? FLOOR_RED_BLINK : FLOOR_RED;
-    } else if (floorvacant[floor] == 1) {
-      blemsg += blinkflag[floor] ? FLOOR_YELLOW_BLINK : FLOOR_YELLOW;
-    } else if (floorvacant[floor] == 'u') {
-      blemsg += FLOOR_OFF;
-    } else {
-      blemsg += blinkflag[floor] ? FLOOR_GREEN_BLINK : FLOOR_GREEN;
-    }
+    blemsg += decideReqChar(floorVacant[floor], floor, isAmbiguous[floor]);
   }
   return blemsg;
+}
+
+function decideReqChar(vacant, floor, isAmbiguous) {
+  if (vacant == 0) {
+    return (floor != THISFLOOR) ? FLOOR_RED : isAmbiguous ? FLOOR_RED_BLINK : THISFLOOR_RED;
+  } else if (vacant == 1) {
+    return (floor != THISFLOOR) ? FLOOR_YELLOW : isAmbiguous ? FLOOR_YELLOW_BLINK : THISFLOOR_YELLOW;
+  } else if (floorVacant[floor] == 'u') {
+    return FLOOR_OFF;
+  } else {
+    return (floor != THISFLOOR) ? FLOOR_GREEN : isAmbiguous ? FLOOR_GREEN_BLINK : THISFLOOR_GREEN;
+  }
 }
 
 function fetchToiletStatus(cb) {

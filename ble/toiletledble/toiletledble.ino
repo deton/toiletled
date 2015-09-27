@@ -4,16 +4,16 @@ const int NUMLEDS = 16; // 0-15
 const int LEDIDX_START = 1; // use LED index 1-15
 const int LEDIDX_END = 15;
 const int MAX_BRIGHTNESS = 4095; // 0-4095
-const uint8_t LEDREQ_OFF   = 0x20; // ' '
-const uint8_t LEDREQ_ON    = 0x21; // '!'
-const uint8_t LEDREQ_BLINK = 0x22; // '"'
+const uint8_t LEDREQ_OFF     = 0x20; // ' '
+const uint8_t LEDREQ_BLINK10 = 0x21; // '!' duty 10%
+const uint8_t LEDREQ_BLINK90 = 0x29; // ')' duty 90%
+const uint8_t LEDREQ_ON      = 0x2A; // '*'
 
 uint32_t prev_recv_tm = 0;
-const uint32_t TIMEOUTMS = 5000; // 5 [sec]
+const uint32_t TIMEOUTMS = 5000; // [ms]
 uint32_t prev_blink_tm = 0;
-const uint32_t BLINKMS = 500; // 500 [ms]
-int isblinks[NUMLEDS];
-int isledon[NUMLEDS];
+const uint32_t BLINK_INTERVAL = 1000; // [ms]
+uint32_t blinkonms[NUMLEDS]; // [ms] 0: no blink, BLINK_INTERVAL*10%, ..., 90%
 
 void setup() {
   Serial.begin(9600); // for BLESerial
@@ -22,7 +22,7 @@ void setup() {
   Tlc.set(1, 2047); // setup OK
   Tlc.update();
   for (int i = 0; i < NUMLEDS; i++) {
-    isblinks[i] = 0;
+    blinkonms[i] = 0;
   }
 }
 
@@ -40,7 +40,6 @@ void Serial_listen() {
     int c = Serial.read();
     if (c == '\n') { // start mark
       prev_recv_tm = millis();
-      prev_blink_tm = millis();
       idx = LEDIDX_START;
       continue;
     }
@@ -48,22 +47,19 @@ void Serial_listen() {
       continue;
     }
     switch (c) {
-    case LEDREQ_BLINK:
-      if (!isblinks[idx]) {
-        isblinks[idx] = 1;
-        isledon[idx] = 1;
-        Tlc.set(idx, MAX_BRIGHTNESS);
-      }
-      break;
     case LEDREQ_ON:
-      isblinks[idx] = 0;
+      blinkonms[idx] = 0;
       Tlc.set(idx, MAX_BRIGHTNESS);
       break;
     case LEDREQ_OFF:
-      isblinks[idx] = 0;
+      blinkonms[idx] = 0;
       Tlc.set(idx, 0);
       break;
     default:
+      if (c >= LEDREQ_BLINK10 && c <= LEDREQ_BLINK90) {
+        int dutyPercent = (c - LEDREQ_BLINK10 + 1) * 10; // 10-90%
+        blinkonms[idx] = BLINK_INTERVAL * dutyPercent / 100;
+      }
       // ignore "OPEN", "CONNECT", "DISCONNECT" from BLESerial
       break;
     }
@@ -72,39 +68,35 @@ void Serial_listen() {
   }
 }
 
-void blink(int i) {
-  if (isledon[i]) {
-    isledon[i] = 0;
-    Tlc.set(i, 0);
+void blinkled(uint32_t now) {
+  if (now >= prev_blink_tm + BLINK_INTERVAL) { // set 'on' all blink LEDs
+    prev_blink_tm = now;
+    for (int i = LEDIDX_START; i <= LEDIDX_END; i++) {
+      if (blinkonms[i]) {
+        Tlc.set(i, MAX_BRIGHTNESS);
+      }
+    }
   } else {
-    isledon[i] = 1;
-    Tlc.set(i, MAX_BRIGHTNESS);
-  }
-}
-
-void blinkled() {
-  for (int i = LEDIDX_START; i <= LEDIDX_END; i++) {
-    if (isblinks[i]) {
-      blink(i);
+    for (int i = LEDIDX_START; i <= LEDIDX_END; i++) {
+      if (blinkonms[i] && now >= prev_blink_tm + blinkonms[i]) {
+        Tlc.set(i, 0);
+      }
     }
   }
   Tlc.update();
-  prev_blink_tm = millis();
 }
 
 void offallled() {
   Tlc.setAll(0);
   Tlc.update();
   for (int i = LEDIDX_START; i <= LEDIDX_END; i++) {
-    isblinks[i] = 0;
+    blinkonms[i] = 0;
   }
 }
 
 void loop() {
   uint32_t now = millis();
-  if (now - prev_blink_tm > BLINKMS) {
-    blinkled();
-  }
+  blinkled(now);
   if (now - prev_recv_tm > TIMEOUTMS) {
     offallled();
   }
