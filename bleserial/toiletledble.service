@@ -1,0 +1,11 @@
+[Unit]
+Description=BLE controller for toilet engaged light
+After=network-online.target
+
+[Service]
+ExecStart=/home/root/toiletledble/start-toiletledble
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

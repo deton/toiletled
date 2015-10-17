@@ -1,0 +1,11 @@
+{
+  "name": "toiletledble",
+  "version": "0.1.0",
+  "description": "Get toilet engated status, send to LEDs using BLE.",
+  "main": "toiletledble.js",
+  "author": "KIHARA, Hideto",
+  "license": "MIT",
+  "dependencies": {
+    "noble": "^1.1.0"
+  }
+}

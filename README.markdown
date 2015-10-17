@@ -59,7 +59,8 @@ Arduino Yun用のものを無理やり入れる。
 
     opkg --force-depends install kmod-rt2800-lib kmod-rt2800-usb kmod-rt2x00-lib kmod-rt2x00-usb
 
-これで、WLI-UC-GNMは刺せば認識されるようになる。
+これで、WLI-UC-GNMは刺せば認識されるようになる
+(が、APとしては動かないようなので少し不便)。
 LAN-W300N/U2Sは、/etc/hotplug.d/usb/に以下のファイル10-lanw300nu2sを作成。
 
 ```
