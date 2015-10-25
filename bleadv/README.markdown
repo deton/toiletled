@@ -18,7 +18,7 @@ edisonがBLE broadcaster、BLE nanoがBLE observer。
 #### ソフトウェア
 * toiletledbcast.js。HTTPでGETしたjsonをもとに、blenoライブラリでBLE advertising packetを定期的に送信。
  * hci.js.diff: node_modules/bleno/lib/hci-socket/hci.jsを変更して、advertising packetをADV_NONCONN_INDで送信するための差分。でないとWindowsのBluetooth管理画面に表示されて邪魔なので。
-* [ToiletLED-observer](https://developer.mbed.org/users/deton/code/ToiletLED-observer/)。BLE advertising packetをscanして受信したら、TLC5940ライブラリを使ってLED制御。
+* [ToiletLED_observer](https://developer.mbed.org/users/deton/code/ToiletLED_observer/)。BLE advertising packetをscanして受信したら、TLC5940ライブラリを使ってLED制御。
 
 #### ハードウェア
 * Intel edison
