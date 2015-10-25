@@ -5,6 +5,8 @@
 [BLESerial](../bleserial)版だと、現場では1時間以上経つとうまく動かなくなる現象が発生したので、
 mbed HRM1017を使用。
 
+[BLEアドバタイズ版](../bleadv)に移行。
+
 ## 構成
 
     LEDs === TLC5940 === mbed HRM1017 ---[BLE]--- edison ---[Wi-Fi]--- HTTPserver

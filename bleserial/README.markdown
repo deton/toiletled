@@ -13,6 +13,8 @@ BLE経由でLED点灯・消灯を指示するようにした版です。
 ただし、現場では1時間以上経つとedison・BLESerial間のBLE通信がうまくいかなくなる現象が発生し、
 一度両方の電源を入れ直さないと復活しないため、実適用は断念。
 
+[BLE版](../ble)や[BLEアドバタイズ版](../bleadv)に移行。
+
 ## 構成
 
     LEDs === TLC5940 === Pro Trinket === BLESerial ---[BLE]--- edison ---[Wi-Fi]--- HTTPserver
