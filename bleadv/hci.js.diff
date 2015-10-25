@@ -1,0 +1,12 @@
+--- node_modules/bleno/lib/hci-socket/hci.js.dist	2015-08-13 02:06:31.000000000 +0900
++++ node_modules/bleno/lib/hci-socket/hci.js	2015-10-25 14:01:46.000000000 +0900
+@@ -199,7 +199,8 @@ Hci.prototype.setAdvertisingParameters =
+   // data
+   cmd.writeUInt16LE(advertisementInterval, 4); // min interval
+   cmd.writeUInt16LE(advertisementInterval, 6); // max interval
+-  cmd.writeUInt8(0x00, 8); // adv type
++  //cmd.writeUInt8(0x00, 8); // adv type
++  cmd.writeUInt8(0x03, 8); // adv type: ADV_NONCONN_IND
+   cmd.writeUInt8(0x00, 9); // own addr typ
+   cmd.writeUInt8(0x00, 10); // direct addr type
+   (new Buffer('000000000000', 'hex')).copy(cmd, 11); // direct addr

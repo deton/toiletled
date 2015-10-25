@@ -1,0 +1,11 @@
+{
+  "name": "toiletledbcast",
+  "version": "0.3.0",
+  "description": "Get toilet engated status and send BLE advertising packet.",
+  "main": "toiletledbcast.js",
+  "author": "KIHARA, Hideto",
+  "license": "MIT",
+  "dependencies": {
+    "bleno": "^0.3.1"
+  }
+}

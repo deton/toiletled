@@ -1,0 +1,11 @@
+[Unit]
+Description=toilet engaged light
+After=network-online.target
+
+[Service]
+ExecStart=/home/root/toiletledbcast/start-toiletledbcast
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=default.target
