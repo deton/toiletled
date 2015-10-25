@@ -21,7 +21,6 @@ var firstEngagedTimes = {};
 // http://www.robotsfx.com/robot/img/radio/BLESerial/BLESerial_how5.html
 var serviceUuid = '569a1101b87f490c92cb11ba5ea5167c'; // BLESerial
 var characteristicUuid = '569a2001b87f490c92cb11ba5ea5167c'; // for write/send
-var peripheralId = 'f924afcb99ae'; // my BLESerial device
 
 noble.on('stateChange', function (state) {
   if (state === 'poweredOn') {
@@ -35,9 +34,6 @@ noble.on('stateChange', function (state) {
 var ledCharacteristic = null;
 
 noble.on('discover', function (peripheral) {
-  if (peripheral.id != peripheralId) {
-    return;
-  }
   noble.stopScanning();
   console.log('found peripheral:', peripheral.advertisement);
   peripheral.on('connect', function () {
@@ -72,11 +68,13 @@ function sendBle(msg, cb) {
   var msgbuf = new Buffer(msg);
   if (ledCharacteristic === null) {
     cb('not connected');
+    return;
   }
   ledCharacteristic.write(msgbuf, true, function (err) {
     if (err) {
       console.log('send error:' + err);
       cb(err);
+      return;
     }
     //console.log('write:' + msgbuf);
     cb(null);
