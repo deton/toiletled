@@ -1,6 +1,6 @@
 # BLEアドバタイズ版トイレ使用中表示ランプ
 
-![toiletled BLEアドバタイズ版](../img/toiletledbleadv.jpg)
+![toiletled BLEアドバタイズ版](../../img/toiletledbleadv.jpg)
 
 mbed HRM1017を使って作成した、[BLE版](../ble)だと、
 コネクション確立のためのコードが必要なのと、

@@ -1,6 +1,6 @@
 # BLE版トイレ使用中表示ランプ
 
-![toiletled BLE版](../img/toiletledble.jpg)
+![toiletled BLE版](../../img/toiletledble.jpg)
 
 [BLESerial](../bleserial)版だと、現場では1時間以上経つとうまく動かなくなる現象が発生したので、
 mbed HRM1017を使用。

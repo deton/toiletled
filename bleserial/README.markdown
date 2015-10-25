@@ -1,6 +1,6 @@
 # BLESerial版トイレ使用中表示ランプ
 
-![toiletled BLESerial版](../img/toiletledbleserial.jpg)
+![toiletled BLESerial版](../../img/toiletledbleserial.jpg)
 
 Wi-Fi版での以下の課題を解決するため、
 BLE経由でLED点灯・消灯を指示するようにした版です。
