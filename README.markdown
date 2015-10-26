@@ -25,6 +25,8 @@
 
 WiFi接続して2秒おきに状況取得を行います。
 
+[BLEアドバタイズ版](bleadv)も作りました。(その他、[BLESerial版](bleserial)、[BLE版](ble))
+
 ## フルカラーLED版
 ![toiletledフルカラー版](../img/toiletledfc.jpg)
 

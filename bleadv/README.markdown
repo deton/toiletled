@@ -1,5 +1,7 @@
 # BLEアドバタイズ版トイレ使用中表示ランプ
 
+![toiletled BLEアドバタイズ版現場写真](../../img/toiletledbleadvw.jpg)
+
 ![toiletled BLEアドバタイズ版](../../img/toiletledbleadv.jpg)
 
 mbed HRM1017を使って作成した、[BLE版](../ble)だと、
