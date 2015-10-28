@@ -25,13 +25,17 @@ BLE経由でLED点灯・消灯を指示するようにした版です。
 * toiletledble.js。HTTPでGETしたjsonをもとに、nobleライブラリでBLESerialに送信。
 * toiletledble.ino。BLESerialが受信したデータをSerialで読んで、TLC5940ライブラリを使ってLED制御。
 
+5階に置くので、遠くから5階の状況が判別しやすいように、5階用のLEDは点滅表示。
+
 #### ハードウェア
 * Intel edison
 * BLESerial
 * Pro Trinket
 * TLC5940
 * ブレッドボード
-* LED 15個(緑黄赤を5セット)
+* LED 15個(緑黄赤を5セット)。
+  どの階の状況かを判別しやすいように、階ごとに形の違うLEDを使用。
+  (秋葉原で千石電商、マルツ、鈴商をまわって集めたもの。)
 * 抵抗680Ω 1個
 * はさみで切れるユニバーサル基板
 * ライトアングル ピンヘッダ 16ピン
