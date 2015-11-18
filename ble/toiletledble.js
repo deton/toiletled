@@ -129,7 +129,7 @@ function makeblemsg(doorStatus) {
     }
   }
   // vacant count or 'u'(nknown) for floor 1-6
-  floorVacant = {};
+  var floorVacant = {};
   for (var floor in floorStatus) {
     var count = floorStatus[floor].reduce(countVacant, 0);
     if (count == 0 && floorStatus[floor].indexOf('unknown') >= 0) {
@@ -152,7 +152,7 @@ function decideReqChar(vacant, floor, isAmbiguous) {
     return (floor != THISFLOOR) ? FLOOR_RED : isAmbiguous ? FLOOR_RED_BLINK : THISFLOOR_RED;
   } else if (vacant == 1) {
     return (floor != THISFLOOR) ? FLOOR_YELLOW : isAmbiguous ? FLOOR_YELLOW_BLINK : THISFLOOR_YELLOW;
-  } else if (floorVacant[floor] == 'u') {
+  } else if (vacant == 'u') {
     return FLOOR_OFF;
   } else {
     return (floor != THISFLOOR) ? FLOOR_GREEN : isAmbiguous ? FLOOR_GREEN_BLINK : THISFLOOR_GREEN;
