@@ -111,9 +111,14 @@ function makeblemsg(doorStatus) {
   // vacant count or 'u'(nknown) for floor 1-6
   var floorVacant = {};
   for (var floor in floorStatus) {
-    var count = floorStatus[floor].reduce(countVacant, 0);
-    if (count == 0 && floorStatus[floor].indexOf('unknown') >= 0) {
+    var count;
+    if (floorStatus[floor].length == 0) {
       count = 'u';
+    } else {
+      count = floorStatus[floor].reduce(countVacant, 0);
+      if (count == 0 && floorStatus[floor].indexOf('unknown') >= 0) {
+        count = 'u';
+      }
     }
     floorVacant[floor] = count;
   }
