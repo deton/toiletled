@@ -3,6 +3,7 @@
 import json, urllib2, sys, time, datetime, serial
 
 THISFLOOR = '3'
+NEARFLOORS = ['1', '4']
 IGNOREFLOOR = '2' # XXX: no sensor at floor 2. always unknown
 FLOOR_OFF    = '   ';
 COLORSET_THISFLOOR =       {'GREEN': ')  ', 'YELLOW': ' ) ', 'RED': '  )'}
@@ -92,8 +93,12 @@ def decide_req_char(vacant, floor, isAmbiguous):
         return FLOOR_OFF
     if floor == THISFLOOR:
         colorset = COLORSET_THISFLOOR
+    elif floor in NEARFLOORS:
+        colorset = COLORSET_NORMAL
     else:
         hour = datetime.datetime.now().hour
+        # for battery saving
+        # (LED on for near floors to avoid mobile battery sleeping)
         if hour >= 21 or hour < 8:
             return FLOOR_OFF
         colorset = COLORSET_NORMAL
