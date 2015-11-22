@@ -32,6 +32,14 @@ LED制御コマンドを受けとる動作が少し面倒。
   UART1(/dev/ttyMFD1)にLED制御コマンドとして書き出し。
 * genToiletled.sh。TWE-Lite(親機、子機)用ファームウェアのソース生成スクリプト。
 
+#### Edison側
+TWE-Lite親機にSerialでLED制御コマンドを書き出すためpyserialを使っているので、
+pipをインストール後、`pip install pyserial`
+
+Edison起動時に自動起動するように、
+twelite.serviceファイルを、/etc/systemd/system/にコピーして、
+`systemctl enable twelite`
+
 #### TWE-Lite用ファームウェア
 ソースはSamp_PingPongをベースにしていますが、
 Samp_PingPongのソースはTOCOSの許可が無いと公開禁止との記述があって面倒なので、
