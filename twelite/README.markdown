@@ -75,6 +75,9 @@ makeコマンドでのビルドのみ確認(Eclipseでは未確認)。
  * 丸ピンソケット 8個
 * 子機側
  * TLC5940
+ * モバイルバッテリのUSB 5V出力を3.3Vに変換するアダプタ。
+   [ブレッドボード用5V/3.3V電源ボード Micro-B版](https://www.switch-science.com/catalog/2398/)
+   または、[DIP化3.3/5V電源キット [brebo.jam.dc]](http://www.aitendo.com/product/12124)
  * ブレッドボード
  * LED 15個(緑黄赤を5セット)
  * 抵抗4.7kΩ 1個
