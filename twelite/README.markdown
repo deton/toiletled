@@ -109,4 +109,5 @@ TWE-Lite用ファームウェアを生成。
   Edison+TWE-Liteに変更。
 
 ## 参考
+* [マイコンにプラス! シリアル拡張IC サンプルブック[基板付き]](http://shop.cqpub.co.jp/hanbai/books/48/48121.html)。PCA9622DRの使い方等
 * TWE-Liteを使った[PresenceLed (出退表示LED)](../../presenceled)
