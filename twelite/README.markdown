@@ -86,6 +86,23 @@ makeコマンドでのビルドのみ確認(Eclipseでは未確認)。
 * 両方で使用
  * はさみで切れるユニバーサル基板
 
+## TWE-Lite+PCA9622版
+LEDドライバとして、TLC5940のかわりにPCA9622を使用する版
+(PCA9622だと各LED用抵抗が必要になるので、PCA9955の方が楽そう)。
+
+LEDブリンクはPCA9622が行うので、通信しない間はTWE-Liteはスリープ可能。
+
+genToiletled.shのかわりに、genToiletledPca9622.shで
+TWE-Lite用ファームウェアを生成。
+
+追加部品:
+
+* [PCA9622DR I2C 16ch LEDドライバ基板](https://www.switch-science.com/catalog/2388/)
+* 抵抗330Ω 15個
+* 抵抗2.2kΩ 2個。I2Cプルアップ用
+
+![toiletled TWE-Lite+PCA9622版](../../img/toiletledtwelitePca9622.jpg)
+
 ## はまった点
 * 当初は、親機はToCoStick+LininoONE+dogUSBで作成していたが、
   電源によっては、LininoONEがWi-Fi接続できない場合があり、
