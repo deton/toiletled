@@ -22,12 +22,16 @@ ser = serial.Serial('/dev/ttyMFD1', 115200)
 # ser = serial.Serial('/dev/ttyUSB0', 115200)
 
 def onoff_floor_led(str):
-    print('t' + str + '\n')
+    #print('t' + str + '\n')
     ser.write('t' + str + '\n')
 
 def alloff_floor_led():
-    print('t' + FLOOR_OFF * 5 + '\n')
+    #print('t' + FLOOR_OFF * 5 + '\n')
     ser.write('t' + FLOOR_OFF * 5 + '\n')
+
+def sleep_floor_led(str):
+    #print('s' + str + '\n')
+    ser.write('s' + str + '\n')
 
 def init():
     alloff_floor_led()
@@ -107,14 +111,26 @@ def main():
     init()
     try:
         while True:
-            doorstatus = fetchstatus()
-            if doorstatus is None: # fetch failed
-                # Serial2Send app in TWE-Lite treats status as valid while 5[s]
-                #alloff_floor_led()
-                time.sleep(1)
+            now = datetime.datetime.now()
+            # for battery saving
+            if now.hour >= 21 or now.hour < 8:
+                if now.hour >= 21:
+                    tomorrow = now + datetime.timedelta(days=1)
+                    wakeup = tomorrow.replace(hour=8)
+                else:
+                    wakeup = now.replace(hour=8)
+                sleepmin = (wakeup - now).seconds / 60
+                sleep_floor_led(sleepmin)
+                time.sleep(300) # 5 min
             else:
-                onoffled(doorstatus)
-                time.sleep(2)
+                doorstatus = fetchstatus()
+                if doorstatus is None: # fetch failed
+                    # Serial2Send app in TWE-Lite treats status as valid while 5[s]
+                    #alloff_floor_led()
+                    time.sleep(1)
+                else:
+                    onoffled(doorstatus)
+                    time.sleep(2)
     finally:
         alloff_floor_led()
         ser.close()
