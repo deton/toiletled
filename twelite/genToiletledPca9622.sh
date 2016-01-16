@@ -30,24 +30,32 @@ head -n 999 >Serial2Send.c.diff << "DIFF"
 600c
 	    	vfPrintf(&sSerStream, "\r\n*** Serial2Send %d.%02d-%d ***", VERSION_MAIN, VERSION_SUB, VERSION_VAR);
 .
-522,576d
-491,520d
+574,576d
+569,572d
+535,567c
+				sAppData.auLedData[u8Idx++] = i16Char;
+			} else if (i16Char == 't' || i16Char == 's') { // LED制御コマンド開始
+				inmsg = TRUE;
+				vClearLedData();
+				u8Idx = 0;
+				sAppData.auLedData[u8Idx++] = i16Char;
+.
+522,533c
+				if (u8Idx >= LEDREQ_LEN) {
+					continue;
+.
+491,520c
+					inmsg = FALSE;
+					continue;
+.
 457,489c
 		if (i16Char >= 0 && i16Char <= 0xff) {
 			if (inmsg) {
 				if (i16Char == '\n' || i16Char == '\r') { // 終端
-					sAppData.i16ValidCountDown = VALIDCOUNT;
-					inmsg = FALSE;
-					continue;
-				}
-				if (u8Idx >= LEDREQ_LEN) {
-					continue;
-				}
-				sAppData.auLedData[u8Idx++] = i16Char;
-			} else if (i16Char == 't') { // LED制御コマンド開始
-				inmsg = TRUE;
-				u8Idx = 0;
-				memset(sAppData.auLedData, ' ', LEDREQ_LEN);
+					if (bIsSleepLedData()) {
+						sAppData.i16ValidCountDown = VALIDFOREVER;
+					} else {
+						sAppData.i16ValidCountDown = VALIDCOUNT;
 .
 455d
 451a
@@ -64,9 +72,9 @@ head -n 999 >Serial2Send.c.diff << "DIFF"
    		if (sAppData.i16ValidCountDown > 0) {
 			sAppData.i16ValidCountDown--;
 		} else if (sAppData.i16ValidCountDown == 0) {
-			sAppData.i16ValidCountDown--;
+			sAppData.i16ValidCountDown = VALIDFOREVER;
 			// 5秒以上データ読み込み無しの時にクリアする
-			memset(sAppData.auLedData, ' ', LEDREQ_LEN);
+			vClearLedData();
 .
 331,332c
    		// LED ON when send
@@ -102,10 +110,21 @@ head -n 999 >Serial2Send.c.diff << "DIFF"
 	// LED制御コマンド要求メッセージに対し、LED制御コマンドを返信する
 .
 128a
-		memset(sAppData.auLedData, ' ', LEDREQ_LEN);
+		vClearLedData();
 .
 100a
 const uint8 PORT_LED_SEND = 16; // DIO16 red LED of ToCoStick
+
+static void vClearLedData()
+{
+	memset(sAppData.auLedData, ' ', LEDREQ_LEN);
+	sAppData.auLedData[0] = 't';
+}
+
+static bool_t bIsSleepLedData()
+{
+	return sAppData.auLedData[0] == 's';
+}
 
 .
 60c
@@ -118,7 +137,7 @@ const uint8 PORT_LED_SEND = 16; // DIO16 red LED of ToCoStick
 	int16 i16ValidCountDown;
 .
 48a
-#define LEDREQ_LEN 15
+#define LEDREQ_LEN 16
 
 // TWE-Lite  ToCoStick   LininoONE        server
 //                            --------------> トイレ使用中状況HTTP GET
@@ -128,6 +147,7 @@ const uint8 PORT_LED_SEND = 16; // DIO16 red LED of ToCoStick
 //    <---------- LED制御コマンド
 #define SENDLED_COUNT (300/4) // TWE-Liteから受信時にLED点灯をする時間。300ms
 #define VALIDCOUNT (5000/4) // Serialから読み込んだLED制御コマンドの有効期間
+#define VALIDFOREVER (-1)
 
 .
 22c
@@ -146,15 +166,6 @@ mv PingPong.c toiletled.c
 # no 'cat' command
 head -n 999 >toiletled.c.diff << "DIFF"
 606,608c
-PRSEV_HANDLER_DEF(E_STATE_APP_SLEEP, tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
-	if (eEvent == E_EVENT_NEW_STATE) {
-		V_PRINTF(LB"Sleeping...(ms=%d)", sAppData.u32Sleepms);
-		SERIAL_vFlush(UART_PORT_SLAVE);
-		sAppData.u32SpentFromRecv += sAppData.u32Sleepms;
-		ToCoNet_vSleep(E_AHI_WAKE_TIMER_0, sAppData.u32Sleepms, FALSE, FALSE);
-	}
-}
-
 /**
  * イベント処理関数リスト
  */
@@ -177,12 +188,21 @@ static void vProcessEvCore(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 }
 .
 602a
-		// 次回コマンド要求の送信は短くして500ms後
-		sAppData.u32Sleepms = RETRY_INTERVAL;
-		ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEP);
+		V_PRINTF(LB"Sleeping...(ms=%d,ramoff=%d)", sAppData.u32Sleepms, bRamOff);
+		SERIAL_vFlush(UART_PORT_SLAVE);
+		ToCoNet_vSleep(E_AHI_WAKE_TIMER_0, sAppData.u32Sleepms, FALSE, bRamOff);
 .
-595,601c
-			PCA9622_bUpdate();
+600,601c
+			sAppData.u32SpentFromRecv += sAppData.u32Sleepms;
+.
+595,598c
+}
+
+PRSEV_HANDLER_DEF(E_STATE_APP_SLEEP, tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
+	if (eEvent == E_EVENT_NEW_STATE) {
+		bool_t bRamOff = FALSE;
+		if (sAppData.u32Sleepms >= RAMOFF_SLEEPMS) {
+			bRamOff = TRUE;
 .
 580,593c
 // LED制御コマンド受信待ち。
@@ -194,10 +214,11 @@ PRSEV_HANDLER_DEF(E_STATE_APP_WAIT_RX, tsEvent *pEv, teEvent eEvent, uint32 u32e
 		V_PRINTF(LB"! TIMEOUT");
 		sAppData.u32SpentFromRecv += ToCoNet_Event_u32TickFrNewState(pEv);
 		if (sAppData.u32SpentFromRecv > VALIDTIME) {
-			// 5秒以上受信無しの時にLED OFF
-			int i;
-			for (i = LEDIDX_OFFSET; i < NUMLEDS; i++) {
-				PCA9622_vSet(i, 0);
+			vOffAllLed(); // 5秒以上受信無しの時にLED OFF
+		}
+		// 次回コマンド要求の送信は短くして500ms後
+		sAppData.u32Sleepms = RETRY_INTERVAL;
+		ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEP);
 .
 575,576c
 PRSEV_HANDLER_DEF(E_STATE_RUNNING, tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
@@ -289,32 +310,19 @@ static void vSendLedReqCmd()
 310,326d
 294,305d
 291a
-		PCA9622_bUpdate();
-	}
 
+	// E_STATE_APP_WAIT_RX側処理に移る
 	ToCoNet_Event_Process(E_ORDER_KICK, 0, vProcessEvCore);
 .
-279,290c
-				break;
-			}
-		}
-		for (; i + LEDIDX_OFFSET < NUMLEDS; i++) {
-			PCA9622_vSet(i + LEDIDX_OFFSET, 0);
-.
+279,290d
 276,277c
-		for (i = 0; i < pRx->u8Len && i + LEDIDX_OFFSET < NUMLEDS; i++) {
-			uint8 c = pRx->auData[i];
-			switch (c) {
-			case LEDREQ_ON:
-				PCA9622_vSet(i + LEDIDX_OFFSET, MAX_BRIGHTNESS);
-				break;
-			case LEDREQ_OFF:
-				PCA9622_vSet(i + LEDIDX_OFFSET, 0);
-				break;
-			default:
-				if (c >= LEDREQ_BLINK10 && c <= LEDREQ_BLINK90) {
-					int dutyPercent10 = (c - LEDREQ_BLINK10 + 1); // 1-9
-					PCA9622_bSetBlink(i + LEDIDX_OFFSET, MAX_BRIGHTNESS * dutyPercent10 / 10);
+		switch (pRx->auData[0]) {
+		case 't': // led request
+			vParseMsgAndUpdateLed(pRx->auData, pRx->u8Len);
+			break;
+		case 's': // sleep request
+			vParseSleepMsg(pRx->auData, pRx->u8Len);
+			break;
 .
 269,274c
 	if (pRx->u8Seq != u16seqPrev) { // シーケンス番号による重複チェック
@@ -330,7 +338,60 @@ static void vSendLedReqCmd()
 .
 236d
 224,232d
-218,221d
+221a
+	}
+	for (; j < NUMLEDS; j++) {
+		PCA9622_vSet(j, 0);
+	}
+	PCA9622_bUpdate();
+}
+
+static void vOffAllLed()
+{
+	int i;
+	for (i = LEDIDX_OFFSET; i < NUMLEDS; i++) {
+		PCA9622_vSet(i, 0);
+	}
+	PCA9622_bUpdate();
+}
+
+static void vParseSleepMsg(uint8 *pMsg, uint8 u8Len)
+{
+	int i;
+	uint32 min = 0;
+
+	vOffAllLed();
+	for (i = 1; i < u8Len; i++) {
+		uint8 c = *(pMsg + i);
+		if (c < '0' || c > '9') {
+			break;
+		}
+		min = min * 10 + c - '0';
+	}
+	sAppData.u32Sleepms = min * 60 * 1000;
+.
+219a
+			if (c >= LEDREQ_BLINK10 && c <= LEDREQ_BLINK90) {
+				int dutyPercent10 = (c - LEDREQ_BLINK10 + 1); // 1-9
+				PCA9622_bSetBlink(j, MAX_BRIGHTNESS * dutyPercent10 / 10);
+			}
+.
+218c
+}
+
+static void vParseMsgAndUpdateLed(uint8 *pMsg, uint8 u8Len)
+{
+	int i, j;
+	for (i = 1, j = LEDIDX_OFFSET; i < u8Len && j < NUMLEDS; i++, j++) {
+		uint8 c = *(pMsg + i);
+		switch (c) {
+		case LEDREQ_ON:
+			PCA9622_vSet(j, MAX_BRIGHTNESS);
+			break;
+		case LEDREQ_OFF:
+			PCA9622_vSet(j, 0);
+			break;
+.
 205,216d
 187,198d
 167,177d
@@ -368,6 +429,7 @@ static void vSendLedReqCmd()
 #define RETRY_INTERVAL 500 // SEND後受信タイムアウト時再送間隔[ms]
 #define VALIDTIME 5000 // 受信したLED制御コマンドの有効期間[ms]。5秒
 #define RXTIMEOUT 64 // SEND後受信待ちタイムアウト時間[ms]
+#define RAMOFF_SLEEPMS 60000 // この値以上sleepする際はメモリ保持しない [ms]
 .
 22c
 #include "toiletled.h"
