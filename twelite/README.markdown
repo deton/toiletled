@@ -92,16 +92,21 @@ LEDドライバとして、TLC5940のかわりにPCA9622を使用する版
 
 LEDブリンクはPCA9622が行うので、通信しない間はTWE-Liteはスリープ可能。
 
+![toiletled TWE-Lite+PCA9622版](../../img/toiletledvin.jpg)
+
 genToiletled.shのかわりに、genToiletledPca9622.shで
 TWE-Lite用ファームウェアを生成。
 
 追加部品:
 
-* [PCA9622DR I2C 16ch LEDドライバ基板](https://www.switch-science.com/catalog/2388/)
-* 抵抗330Ω 15個
+* [PCA9622DR I2C 16ch LEDドライバ基板](https://www.switch-science.com/catalog/2388/)。
+  電池消費を抑えるため、表面実装されているLED用のパターンをカット。
+* 抵抗470Ω 11個
+* 抵抗330Ω 4個。角型LEDの緑と黄が他と比べて暗かったので、小さい抵抗に変更
 * 抵抗2.2kΩ 2個。I2Cプルアップ用
 
-![toiletled TWE-Lite+PCA9622版](../../img/toiletledtwelitePca9622.jpg)
+![TWE-Lite+PCA9622版前面](../../img/toiletledvinf.jpg)
+![TWE-Lite+PCA9622版背面](../../img/toiletledvinb.jpg)
 
 ## はまった点
 * 当初は、親機はToCoStick+LininoONE+dogUSBで作成していたが、
