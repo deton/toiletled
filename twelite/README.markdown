@@ -84,7 +84,8 @@ makeコマンドでのビルドのみ確認(Eclipseでは未確認)。
  * 抵抗4.7kΩ 1個
  * ライトアングル ピンヘッダ 16ピン
 * 両方で使用
- * はさみで切れるユニバーサル基板
+ * はさみで切れるユニバーサル基板UB-THN01(片面)、
+   または、両面スルーホールの[曲がる基板](http://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-00PJ)
 
 ## TWE-Lite+PCA9622版
 LEDドライバとして、TLC5940のかわりにPCA9622を使用する版
@@ -101,9 +102,10 @@ TWE-Lite用ファームウェアを生成。
 
 * [PCA9622DR I2C 16ch LEDドライバ基板](https://www.switch-science.com/catalog/2388/)。
   電池消費を抑えるため、表面実装されているLED用のパターンをカット。
-* 抵抗470Ω 11個
-* 抵抗330Ω 4個。角型LEDの緑と黄が他と比べて暗かったので、小さい抵抗に変更
+* 小型抵抗470Ω 11個
+* 小型抵抗330Ω 4個。角型LEDの緑と黄が他と比べて暗かったので、小さい抵抗に変更
 * 抵抗2.2kΩ 2個。I2Cプルアップ用
+* UEW線。PCA9622とLED間の配線用
 
 ![TWE-Lite+PCA9622版前面](../../img/toiletledvinf.jpg)
 ![TWE-Lite+PCA9622版背面](../../img/toiletledvinb.jpg)
