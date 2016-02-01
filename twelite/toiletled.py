@@ -2,7 +2,7 @@
 # coding: utf8
 import json, urllib2, sys, time, datetime, serial
 
-THISFLOOR = '3'
+THISFLOOR = '6'
 IGNOREFLOOR = '2' # XXX: no sensor at floor 2. always unknown
 FLOOR_OFF    = '   ';
 COLORSET_THISFLOOR =       {'GREEN': ')  ', 'YELLOW': ' ) ', 'RED': '  )'}
@@ -119,6 +119,13 @@ def main():
                     wakeup = tomorrow.replace(hour=8)
                 else:
                     wakeup = now.replace(hour=8)
+                sleepmin = (wakeup - now).seconds / 60
+                sleep_floor_led(sleepmin)
+                time.sleep(300) # 5 min
+            elif now.weekday() == 5 or now.weekday() == 6: # Sat. or Sun.
+                daysdelta = 7 - now.weekday()
+                monday = now + datetime.timedelta(days=daysdelta)
+                wakeup = monday.replace(hour=8)
                 sleepmin = (wakeup - now).seconds / 60
                 sleep_floor_led(sleepmin)
                 time.sleep(300) # 5 min
