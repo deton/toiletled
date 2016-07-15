@@ -29,9 +29,10 @@ def alloff_floor_led():
     #print('t' + FLOOR_OFF * 5 + '\n')
     ser.write('t' + FLOOR_OFF * 5 + '\n')
 
-def sleep_floor_led(str):
-    #print('s' + str + '\n')
-    ser.write('s' + str + '\n')
+def sleep_floor_led(min):
+    s = str(min)
+    #print('s' + s + '\n')
+    ser.write('s' + s + '\n')
 
 def init():
     alloff_floor_led()
